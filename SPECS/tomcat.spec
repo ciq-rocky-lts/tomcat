@@ -56,7 +56,7 @@
 Name:          tomcat
 Epoch:         1
 Version:       %{major_version}.%{minor_version}.%{micro_version}
-Release:       6%{?dist}.3
+Release:       7%{?dist}
 Summary:       Apache Servlet/JSP Engine, RI for Servlet %{servletspec}/JSP %{jspspec} API
 
 License:       ASL 2.0
@@ -85,6 +85,7 @@ Patch6:        remove-bnd-annotation.patch
 Patch7:        JmxRemoteLifecycleListener.patch
 Patch8:        fix-malformed-dtd.patch
 Patch9:        cve-2023-46589.patch
+patch10:       cve-2024-34750.patch
 
 BuildArch:     noarch
 
@@ -560,6 +561,9 @@ fi
 
 
 %changelog
+* Fri Aug 30 2024 Pratham Patel <ppatel@ciq.com> - 1:9.0.62-7
+- Fix CVE-2024-34750
+
 * Tue Jan 30 2024 Matt Hink <mhink@ciq.com> - 1:9.0.62-6.3
 - dnf was selecting the old version. 9.0.62-5.el8_8.2 rather than 9.0.62-5.el8_8.ciqlts.3
 

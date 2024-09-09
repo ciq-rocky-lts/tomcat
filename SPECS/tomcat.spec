@@ -31,8 +31,8 @@
 %global jspspec 2.3
 %global major_version 9
 %global minor_version 0
-%global micro_version 62
-%global packdname %{name}-%{major_version}.%{minor_version}.%{micro_version}.redhat-00014-src
+%global micro_version 87
+%global packdname %{name}-%{major_version}.%{minor_version}.%{micro_version}.redhat-00005-src
 %global servletspec 4.0
 %global elspec 3.0
 %global tcuid 53
@@ -56,7 +56,7 @@
 Name:          tomcat
 Epoch:         1
 Version:       %{major_version}.%{minor_version}.%{micro_version}
-Release:       7%{?dist}
+Release:       1%{?dist}.2
 Summary:       Apache Servlet/JSP Engine, RI for Servlet %{servletspec}/JSP %{jspspec} API
 
 License:       ASL 2.0
@@ -83,14 +83,11 @@ Patch4:        rhbz-1857043.patch
 # remove bnd dependency which version is too low on rhel8
 Patch6:        remove-bnd-annotation.patch
 Patch7:        JmxRemoteLifecycleListener.patch
-Patch8:        fix-malformed-dtd.patch
-Patch9:        cve-2023-46589.patch
-patch10:       cve-2024-34750.patch
 
 BuildArch:     noarch
 
 BuildRequires: ant
-BuildRequires: ecj >= 1:4.10
+BuildRequires: ecj
 BuildRequires: findutils
 BuildRequires: javapackages-local
 BuildRequires: aqute-bnd
@@ -108,8 +105,7 @@ Requires(post):   systemd
 Requires(preun):  systemd
 Requires(postun): systemd
 
-# We will change it to an obsoletes whenever the pki team is able to make the switch
-Conflicts: pki-servlet-engine <= 1:9.0.50
+Obsoletes: pki-servlet-engine <= 1:9.0.50
 
 # added after log4j sub-package was removed
 Provides:         %{name}-log4j = %{epoch}:%{version}-%{release}
@@ -144,7 +140,7 @@ Provides: jsp = %{jspspec}
 Obsoletes: %{name}-jsp-2.2-api
 Requires: %{name}-servlet-%{servletspec}-api = %{epoch}:%{version}-%{release}
 Requires: %{name}-el-%{elspec}-api = %{epoch}:%{version}-%{release}
-Conflicts: pki-servlet-engine <= 1:9.0.50
+Obsoletes: pki-servlet-engine <= 1:9.0.50
 
 %description jsp-%{jspspec}-api
 Apache Tomcat JSP API Implementation Classes.
@@ -156,7 +152,7 @@ Requires: %{name}-servlet-%{servletspec}-api = %{epoch}:%{version}-%{release}
 Requires: %{name}-el-%{elspec}-api = %{epoch}:%{version}-%{release}
 Requires: ecj >= 1:4.10
 Requires(preun): coreutils
-Conflicts: pki-servlet-engine <= 1:9.0.50
+Obsoletes: pki-servlet-engine <= 1:9.0.50
 
 %description lib
 Libraries needed to run the Tomcat Web container.
@@ -167,7 +163,7 @@ Provides: servlet = %{servletspec}
 Provides: servlet6
 Provides: servlet3
 Obsoletes: %{name}-servlet-3.1-api
-Conflicts: pki-servlet-4.0-api <= 1:9.0.50
+Obsoletes: pki-servlet-4.0-api <= 1:9.0.50
 
 %description servlet-%{servletspec}-api
 Apache Tomcat Servlet API Implementation Classes.
@@ -176,7 +172,7 @@ Apache Tomcat Servlet API Implementation Classes.
 Summary: Apache Tomcat Expression Language v%{elspec} API Implementation Classes
 Provides: el_api = %{elspec}
 Obsoletes: %{name}-el-2.2-api
-Conflicts: pki-servlet-engine <= 1:9.0.50 and pki-servlet-container <= 1:9.0.7
+Obsoletes: pki-servlet-engine <= 1:9.0.50
 
 %description el-%{elspec}-api
 Apache Tomcat EL API Implementation Classes.
@@ -201,7 +197,6 @@ find . -type f \( -name "*.bat" -o -name "*.class" -o -name Thumbs.db -o -name "
 %patch -P4 -p0
 %patch -P6 -p1
 %patch -P7 -p1
-%patch -P8 -p1
 
 # Remove webservices naming resources as it's generally unused
 %{__rm} -rf java/org/apache/naming/factory/webservices
@@ -561,22 +556,81 @@ fi
 
 
 %changelog
-* Fri Aug 30 2024 Pratham Patel <ppatel@ciq.com> - 1:9.0.62-7
-- Fix CVE-2024-34750
+* Thu Aug 08 2024 Adam Krajcik <akrajcik@redhat.com> - 1:9.0.87-1.el8_10.2
+- Resolves: RHEL-46167
+  tomcat: Improper Handling of Exceptional Conditions (CVE-2024-34750)
 
-* Tue Jan 30 2024 Matt Hink <mhink@ciq.com> - 1:9.0.62-6.3
-- dnf was selecting the old version. 9.0.62-5.el8_8.2 rather than 9.0.62-5.el8_8.ciqlts.3
+* Mon Jun 03 2024 Sokratis Zappis <szappis@redhat.com> - 1:9.0.87-1.el8_10.1
+- Resolves: RHEL-38548 - Amend tomcat package's changelog so that fixed CVEs are mentioned explicitly
+- Resolves: RHEL-35813 - Rebase tomcat to version 9.0.87
+- Resolves: RHEL-29255
+  tomcat: Apache Tomcat: WebSocket DoS with incomplete closing handshake (CVE-2024-23672)
+- Resolves: RHEL-29250
+  tomcat: Apache Tomcat: HTTP/2 header handling DoS (CVE-2024-24549)
 
-* Tue Jan 30 2024 Matt Hink <mhink@ciq.com> - 1:9.0.62-5.3
-- Patch cve-2023-46589
+* Fri Jan 19 2024 Hui Wang <huwang@redhat.com> - 1:9.0.62-30
+- Resolves: RHEL-6971
 
-* Fri Oct 13 2023 Hui Wang <huwang@redhat.com> - 1:9.0.62-5.2
-- Resolves: RHEL-12884 Missing Tomcat POM files in RHEL 8.8
+* Thu Jan 18 2024 Hui Wang <huwang@redhat.com> - 1:9.0.62-29
+- Resolves: RHEL-17602
+  tomcat: HTTP request smuggling via malformed trailer headers (CVE-2023-46589)
+- tomcat: Apache Tomcat: HTTP/2 header handling DoS (CVE-2024-24549)
 
-* Thu Oct 12 2023 Hui Wang <huwang@redhat.com> - 1:9.0.62-5.1
-- Resolves: RHEL-12542 HTTP/2: Multiple HTTP/2 enabled web servers are vulnerable to a DDoS attack (Rapid Reset Attack)
-- Update source to include the CVE fixes
-- Update patch command
+* Thu Nov 23 2023 Hui Wang <huwang@redhat.com> - 1:9.0.62-28
+- Resolves: RHEL-13907
+  tomcat: incorrectly parsed http trailer headers can cause request smuggling (CVE-2023-45648)
+- Resolves: RHEL-13904
+  tomcat: improper cleaning of recycled objects could lead to information leak (CVE-2023-42795)
+- Resolves: RHEL-12951
+  tomcat: FileUpload: DoS due to accumulation of temporary files on Windows (CVE-2023-42794)
+- Resolves: RHEL-12544
+  tomcat: HTTP/2: Multiple HTTP/2 enabled web servers are vulnerable to a DDoS attack (Rapid Reset Attack) (CVE-2023-44487)
+- Resolves: RHEL-2386
+  tomcat: Open Redirect vulnerability in FORM authentication (CVE-2023-41080)
+
+* Fri Oct 13 2023 Hui Wang <huwang@redhat.com> - 1:9.0.62-27
+- Related: RHEL-12543
+  tomcat: HTTP/2: Multiple HTTP/2 enabled web servers are vulnerable to a DDoS attack (Rapid Reset Attack) (CVE-2023-44487)
+- Bump release number
+
+* Thu Oct 12 2023 Hui Wang <huwang@redhat.com> - 1:9.0.62-16
+- Resolves: RHEL-12543
+  tomcat: HTTP/2: Multiple HTTP/2 enabled web servers are vulnerable to a DDoS attack (Rapid Reset Attack) (CVE-2023-44487)
+- Remove JDK subpackges which are unused
+
+* Fri Sep 08 2023 Hui Wang <huwang@redhat.com> - 1:9.0.62-14
+- Related: RHEL-2330 Bump release number
+
+* Thu Sep 07 2023 Hui Wang <huwang@redhat.com> - 1:9.0.62-13
+- Resolves: RHEL-2330 Revert the fix for pki-servlet-engine
+
+* Fri Aug 25 2023 Coty Sutherland <csutherl@redhat.com> - 1:9.0.62-12
+- Related: #2184135 Declare file conflicts
+
+* Fri Aug 25 2023 Coty Sutherland <csutherl@redhat.com> - 1:9.0.62-11
+- Resolves: #2184135 Fix bug introduced in initial commit
+
+* Fri Aug 18 2023 Hui Wang <huwang@redhat.com> - 1:9.0.62-10
+- Resolves: #2210630 CVE-2023-28709 tomcat
+- Resolves: #2181448 CVE-2023-28708 tomcat: not including the secure attribute causes information disclosure
+- tomcat: Apache Commons FileUpload: FileUpload DoS with excessive parts (CVE-2023-24998)
+  tomcat: JsonErrorReportValve injection (CVE-2022-45143)
+  tomcat: request smuggling (CVE-2022-42252)
+  tomcat: local privilege escalation vulnerability (CVE-2022-23181)
+
+* Thu Aug 17 2023 Hui Wang <huwang@redhat.com> - 1:9.0.62-9
+- Resolves: #2184135 Add Obsoletes to tomcat package
+
+* Thu Aug 17 2023 Hui Wang <huwang@redhat.com> - 1:9.0.62-8
+- Resolves: #2189676 Missing Tomcat POM files in RHEL 8.9
+
+* Tue Aug 15 2023 Hui Wang <huwang@redhat.com> - 1:9.0.62-7
+- Related: #2173874 Tomcat installs older java even though newer java is installed
+- Bump release number
+
+* Fri Aug 11 2023 Hui Wang <huwang@redhat.com> - 1:9.0.62-6
+- Resolves: #2173874 Tomcat installs older java even though newer java is installed
+- Sync with rhel-8.8.0 branch
 
 * Thu Feb 16 2023 Coty Sutherland <csutherl@redhat.com> - 1:9.0.62-5
 - Related: #2160455 Add conflicts to subpackage

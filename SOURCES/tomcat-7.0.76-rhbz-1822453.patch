@@ -1,0 +1,10 @@
+--- ./java/org/apache/coyote/http11/AbstractHttp11Processor.java.orig	2020-04-09 12:07:26.128832599 +0900
++++ ./java/org/apache/coyote/http11/AbstractHttp11Processor.java	2020-04-09 12:07:35.027847534 +0900
+@@ -1318,6 +1318,7 @@
+             }
+             // Next 3 characters must be "://"
+             if (uriBC.startsWith("://", pos)) {
++                pos += 3;
+                 int uriBCStart = uriBC.getStart();
+ 
+                 // '/' does not appear in the authority so use the first

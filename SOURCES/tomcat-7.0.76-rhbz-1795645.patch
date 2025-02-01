@@ -1,0 +1,394 @@
+diff --git a/modules/jdbc-pool/src/main/java/org/apache/tomcat/jdbc/pool/ConnectionPool.java b/modules/jdbc-pool/src/main/java/org/apache/tomcat/jdbc/pool/ConnectionPool.java
+index b1510617e7..69ed482256 100644
+--- modules/jdbc-pool/src/main/java/org/apache/tomcat/jdbc/pool/ConnectionPool.java
++++ modules/jdbc-pool/src/main/java/org/apache/tomcat/jdbc/pool/ConnectionPool.java
+@@ -328,7 +328,10 @@ public class ConnectionPool {
+                 next = next.getNext();
+             }
+         }
+-
++        // setup statement proxy
++        if (getPoolProperties().getUseStatementFacade()) {
++            handler = new StatementFacade(handler);
++        }
+         try {
+             getProxyConstructor(con.getXAConnection() != null);
+             //create the proxy
+diff --git a/modules/jdbc-pool/src/main/java/org/apache/tomcat/jdbc/pool/DataSourceFactory.java b/modules/jdbc-pool/src/main/java/org/apache/tomcat/jdbc/pool/DataSourceFactory.java
+index 120a6f6bdc..d0a41dfdff 100644
+--- modules/jdbc-pool/src/main/java/org/apache/tomcat/jdbc/pool/DataSourceFactory.java
++++ modules/jdbc-pool/src/main/java/org/apache/tomcat/jdbc/pool/DataSourceFactory.java
+@@ -125,6 +125,8 @@ public class DataSourceFactory implements ObjectFactory {
+ 
+     protected static final String PROP_IGNOREEXCEPTIONONPRELOAD = "ignoreExceptionOnPreLoad";
+ 
++    protected static final String PROP_USESTATEMENTFACADE = "useStatementFacade";
++
+     public static final int UNKNOWN_TRANSACTIONISOLATION = -1;
+ 
+     public static final String OBJECT_NAME = "object_name";
+@@ -180,7 +182,8 @@ public class DataSourceFactory implements ObjectFactory {
+         PROP_USEDISPOSABLECONNECTIONFACADE,
+         PROP_LOGVALIDATIONERRORS,
+         PROP_PROPAGATEINTERRUPTSTATE,
+-        PROP_IGNOREEXCEPTIONONPRELOAD
++        PROP_IGNOREEXCEPTIONONPRELOAD,
++        PROP_USESTATEMENTFACADE
+     };
+ 
+     // -------------------------------------------------- ObjectFactory Methods
+@@ -528,7 +531,10 @@ public class DataSourceFactory implements ObjectFactory {
+         if (value != null) {
+             poolProperties.setIgnoreExceptionOnPreLoad(Boolean.parseBoolean(value));
+         }
+-
++        value = properties.getProperty(PROP_USESTATEMENTFACADE);
++        if (value != null) {
++            poolProperties.setUseStatementFacade(Boolean.parseBoolean(value));
++        }
+         return poolProperties;
+     }
+ 
+diff --git a/modules/jdbc-pool/src/main/java/org/apache/tomcat/jdbc/pool/DataSourceProxy.java b/modules/jdbc-pool/src/main/java/org/apache/tomcat/jdbc/pool/DataSourceProxy.java
+index b5d0c0a0ad..cea6370a92 100644
+--- modules/jdbc-pool/src/main/java/org/apache/tomcat/jdbc/pool/DataSourceProxy.java
++++ modules/jdbc-pool/src/main/java/org/apache/tomcat/jdbc/pool/DataSourceProxy.java
+@@ -1418,6 +1418,22 @@ public class DataSourceProxy implements PoolConfiguration {
+         getPoolProperties().setIgnoreExceptionOnPreLoad(ignoreExceptionOnPreLoad);
+     }
+ 
++    /**
++     * {@inheritDoc}
++     */
++    @Override
++    public boolean getUseStatementFacade() {
++        return getPoolProperties().getUseStatementFacade();
++    }
++
++    /**
++     * {@inheritDoc}
++     */
++    @Override
++    public void setUseStatementFacade(boolean useStatementFacade) {
++        getPoolProperties().setUseStatementFacade(useStatementFacade);
++    }
++
+     public void purge()  {
+         try {
+             createPool().purge();
+diff --git a/modules/jdbc-pool/src/main/java/org/apache/tomcat/jdbc/pool/PoolConfiguration.java b/modules/jdbc-pool/src/main/java/org/apache/tomcat/jdbc/pool/PoolConfiguration.java
+index ae489a038e..b0f7f4f54b 100644
+--- modules/jdbc-pool/src/main/java/org/apache/tomcat/jdbc/pool/PoolConfiguration.java
++++ modules/jdbc-pool/src/main/java/org/apache/tomcat/jdbc/pool/PoolConfiguration.java
+@@ -889,4 +889,18 @@ public interface PoolConfiguration {
+      */
+     public boolean isIgnoreExceptionOnPreLoad();
+ 
++    /**
++     * Set this to true if you wish to wrap statements in order to enable equals() and hashCode()
++     * methods to be called on the closed statements if any statement proxy is set.
++     * @param useStatementFacade set to <code>true</code> to wrap statements
++     */
++    public void setUseStatementFacade(boolean useStatementFacade);
++
++    /**
++     * Returns <code>true</code> if this connection pool is configured to wrap statements in order
++     * to enable equals() and hashCode() methods to be called on the closed statements if any
++     * statement proxy is set.
++     * @return <code>true</code> if the statements are wrapped
++     */
++    public boolean getUseStatementFacade();
+ }
+diff --git a/modules/jdbc-pool/src/main/java/org/apache/tomcat/jdbc/pool/PoolProperties.java b/modules/jdbc-pool/src/main/java/org/apache/tomcat/jdbc/pool/PoolProperties.java
+index 2a2131f008..070d1d0a4c 100644
+--- modules/jdbc-pool/src/main/java/org/apache/tomcat/jdbc/pool/PoolProperties.java
++++ modules/jdbc-pool/src/main/java/org/apache/tomcat/jdbc/pool/PoolProperties.java
+@@ -28,6 +28,7 @@ import java.util.Properties;
+ import java.util.concurrent.atomic.AtomicInteger;
+ 
+ 
++
+ import org.apache.juli.logging.Log;
+ import org.apache.juli.logging.LogFactory;
+ 
+@@ -94,7 +95,7 @@ public class PoolProperties implements PoolConfiguration, Cloneable, Serializabl
+     private volatile boolean logValidationErrors = false;
+     private volatile boolean propagateInterruptState = false;
+     private volatile boolean ignoreExceptionOnPreLoad = false;
+-
++    private volatile boolean useStatementFacade = true;
+ 
+     /**
+      * {@inheritDoc}
+@@ -1290,6 +1291,22 @@ public class PoolProperties implements PoolConfiguration, Cloneable, Serializabl
+         this.ignoreExceptionOnPreLoad = ignoreExceptionOnPreLoad;
+     }
+ 
++    /**
++     * {@inheritDoc}
++     */
++    @Override
++    public boolean getUseStatementFacade() {
++        return useStatementFacade;
++    }
++
++    /**
++     * {@inheritDoc}
++     */
++    @Override
++    public void setUseStatementFacade(boolean useStatementFacade) {
++        this.useStatementFacade = useStatementFacade;
++    }
++
+     @Override
+     protected Object clone() throws CloneNotSupportedException {
+         // TODO Auto-generated method stub
+diff --git a/modules/jdbc-pool/src/main/java/org/apache/tomcat/jdbc/pool/StatementFacade.java b/modules/jdbc-pool/src/main/java/org/apache/tomcat/jdbc/pool/StatementFacade.java
+new file mode 100644
+index 0000000000..f3c8e59d28
+--- /dev/null
++++ modules/jdbc-pool/src/main/java/org/apache/tomcat/jdbc/pool/StatementFacade.java
+@@ -0,0 +1,177 @@
++/*
++ * Licensed to the Apache Software Foundation (ASF) under one or more
++ * contributor license agreements.  See the NOTICE file distributed with
++ * this work for additional information regarding copyright ownership.
++ * The ASF licenses this file to You under the Apache License, Version 2.0
++ * (the "License"); you may not use this file except in compliance with
++ * the License.  You may obtain a copy of the License at
++ *
++ *      http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++
++package org.apache.tomcat.jdbc.pool;
++
++import java.lang.reflect.Constructor;
++import java.lang.reflect.InvocationHandler;
++import java.lang.reflect.InvocationTargetException;
++import java.lang.reflect.Method;
++import java.lang.reflect.Proxy;
++import java.sql.CallableStatement;
++import java.sql.PreparedStatement;
++import java.sql.Statement;
++
++import org.apache.juli.logging.Log;
++import org.apache.juli.logging.LogFactory;
++import org.apache.tomcat.jdbc.pool.interceptor.AbstractCreateStatementInterceptor;
++
++public class StatementFacade extends AbstractCreateStatementInterceptor {
++
++    private static final Log logger = LogFactory.getLog(StatementFacade.class);
++
++    /**
++     * the constructors that are used to create statement proxies
++     */
++    protected static final Constructor<?>[] constructors
++            = new Constructor[AbstractCreateStatementInterceptor.STATEMENT_TYPE_COUNT];
++
++    protected StatementFacade(JdbcInterceptor interceptor) {
++        setUseEquals(interceptor.isUseEquals());
++        setNext(interceptor);
++    }
++
++    @Override
++    public void closeInvoked() {
++        // nothing to do
++    }
++
++    /**
++     * Creates a statement interceptor to monitor query response times
++     */
++    @Override
++    public Object createStatement(Object proxy, Method method, Object[] args, Object statement, long time) {
++        try {
++            String name = method.getName();
++            Constructor<?> constructor = null;
++            String sql = null;
++            if (compare(CREATE_STATEMENT, name)) {
++                // createStatement
++                constructor = getConstructor(CREATE_STATEMENT_IDX, Statement.class);
++            } else if (compare(PREPARE_STATEMENT, name)) {
++                // prepareStatement
++                constructor = getConstructor(PREPARE_STATEMENT_IDX, PreparedStatement.class);
++                sql = (String)args[0];
++            } else if (compare(PREPARE_CALL, name)) {
++                // prepareCall
++                constructor = getConstructor(PREPARE_CALL_IDX, CallableStatement.class);
++                sql = (String)args[0];
++            } else {
++                // do nothing
++                return statement;
++            }
++            return constructor.newInstance(new Object[] { new StatementProxy(statement,sql) });
++        } catch (Exception x) {
++            logger.warn("Unable to create statement proxy.", x);
++        }
++        return statement;
++    }
++
++    /**
++     * Creates a constructor for a proxy class, if one doesn't already exist
++     *
++     * @param idx
++     *            - the index of the constructor
++     * @param clazz
++     *            - the interface that the proxy will implement
++     * @return - returns a constructor used to create new instances
++     * @throws NoSuchMethodException Constructor not found
++     */
++    protected Constructor<?> getConstructor(int idx, Class<?> clazz) throws NoSuchMethodException {
++        if (constructors[idx] == null) {
++            Class<?> proxyClass = Proxy.getProxyClass(StatementFacade.class.getClassLoader(),
++                    new Class[] { clazz });
++            constructors[idx] = proxyClass.getConstructor(new Class[] { InvocationHandler.class });
++        }
++        return constructors[idx];
++    }
++
++    /**
++     * Class to measure query execute time.
++     */
++    protected class StatementProxy implements InvocationHandler {
++        protected boolean closed = false;
++        protected Object delegate;
++        protected final String query;
++        public StatementProxy(Object parent, String query) {
++            this.delegate = parent;
++            this.query = query;
++        }
++
++        @Override
++        public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
++            if (compare(TOSTRING_VAL,method)) {
++                return toString();
++            }
++            if (compare(EQUALS_VAL, method)) {
++                return Boolean.valueOf(
++                        this.equals(Proxy.getInvocationHandler(args[0])));
++            }
++            if (compare(HASHCODE_VAL, method)) {
++                return Integer.valueOf(this.hashCode());
++            }
++            if (compare(CLOSE_VAL, method)) {
++                if (delegate == null) return null;
++            }
++            if (compare(ISCLOSED_VAL, method)) {
++                if (delegate == null) return true;
++            }
++
++            Object result =  null;
++            try {
++                //invoke next
++                result =  method.invoke(delegate,args);
++            } catch (Throwable t) {
++                if (t instanceof InvocationTargetException && t.getCause() != null) {
++                    throw t.getCause();
++                } else {
++                    throw t;
++                }
++            }
++            //perform close cleanup
++            if (compare(CLOSE_VAL, method)) {
++                delegate = null;
++            }
++            return result;
++        }
++
++        @Override
++        public int hashCode() {
++            return System.identityHashCode(this);
++        }
++
++        @Override
++        public boolean equals(Object obj) {
++            return this==obj;
++        }
++
++        @Override
++        public String toString() {
++            StringBuffer buf = new StringBuffer(StatementProxy.class.getName());
++            buf.append("[Proxy=");
++            buf.append(hashCode());
++            buf.append("; Query=");
++            buf.append(query);
++            buf.append("; Delegate=");
++            buf.append(delegate);
++            buf.append("]");
++            return buf.toString();
++        }
++    }
++
++}
+diff --git a/modules/jdbc-pool/src/main/java/org/apache/tomcat/jdbc/pool/jmx/ConnectionPool.java b/modules/jdbc-pool/src/main/java/org/apache/tomcat/jdbc/pool/jmx/ConnectionPool.java
+index 8eb0bfefa0..27928d19b3 100644
+--- modules/jdbc-pool/src/main/java/org/apache/tomcat/jdbc/pool/jmx/ConnectionPool.java
++++ modules/jdbc-pool/src/main/java/org/apache/tomcat/jdbc/pool/jmx/ConnectionPool.java
+@@ -916,6 +916,22 @@ public class ConnectionPool extends NotificationBroadcasterSupport implements Co
+         throw new UnsupportedOperationException();
+     }
+ 
++    /**
++     * {@inheritDoc}
++     */
++    @Override
++    public boolean getUseStatementFacade() {
++        return getPoolProperties().getUseStatementFacade();
++    }
++
++    /**
++     * {@inheritDoc}
++     */
++    @Override
++    public void setUseStatementFacade(boolean useStatementFacade) {
++        getPoolProperties().setUseStatementFacade(useStatementFacade);
++    }
++
+     /**
+      * {@inheritDoc}
+      */
+diff --git a/modules/jdbc-pool/src/main/java/org/apache/tomcat/jdbc/pool/mbeans-descriptors.xml b/modules/jdbc-pool/src/main/java/org/apache/tomcat/jdbc/pool/mbeans-descriptors.xml
+index 1694c80ae7..38b009fa03 100644
+--- modules/jdbc-pool/src/main/java/org/apache/tomcat/jdbc/pool/mbeans-descriptors.xml
++++ modules/jdbc-pool/src/main/java/org/apache/tomcat/jdbc/pool/mbeans-descriptors.xml
+@@ -330,6 +330,12 @@
+                     is="true"
+              writeable="false"/>
+ 
++    <attribute    name="useStatementFacade"
++           description="If true, connection pool is configured to wrap statements."
++                  type="java.lang.Boolean"
++                    is="false"
++             writeable="false"/>
++
+     <attribute    name="borrowedCount"
+            description="The total number of connections borrowed from this pool"
+                   type="java.lang.Long"
+--- webapps/docs/changelog.xml.orig	2020-04-24 16:00:49.785724188 -0400
++++ webapps/docs/changelog.xml	2020-04-24 16:01:36.893626166 -0400
+@@ -57,6 +57,19 @@
+   They eventually become mixed with the numbered issues. (I.e., numbered
+   issues do not "pop up" wrt. others).
+ -->
++<section name="Tomcat 7.0.76-12 (csutherl)">
++  <subsection name="jdbc-pool">
++    <changelog>
++      <fix>
++        <bug>60764</bug>: Implement <code>equals()</code> and
++        <code>hashCode()</code> in the <code>StatementFacade</code> in order to
++        enable these methods to be called on the closed statements if any
++        statement proxy is set. This behavior can be changed with
++        <code>useStatementFacade</code> attribute. (kfujino)
++      </fix>
++    </changelog>
++  </subsection>
++</section>
+ <section name="Tomcat 7.0.76-11 (csutherl)">
+   <subsection name="Coyote">
+     <changelog>

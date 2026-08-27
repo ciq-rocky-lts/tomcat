@@ -56,7 +56,7 @@
 Name:          tomcat
 Epoch:         1
 Version:       %{major_version}.%{minor_version}.%{micro_version}
-Release:       2%{?dist}.1
+Release:       2.1%{?dist}.1
 Summary:       Apache Servlet/JSP Engine, RI for Servlet %{servletspec}/JSP %{jspspec} API
 
 License:       ASL 2.0
@@ -82,6 +82,8 @@ Patch3:        %{name}-%{major_version}.%{minor_version}-catalina-policy.patch
 Patch4:        rhbz-1857043.patch
 Patch6:        %{name}-%{major_version}.%{minor_version}-bnd-annotation.patch
 Patch7:        JmxRemoteLifecycleListener.patch
+# CVE-2026-29146, CVE-2026-34486 — upstream backport
+Patch8:        %{name}-9.0-CVE-2026-29146.patch
 
 BuildArch:     noarch
 
@@ -198,6 +200,7 @@ find . -type f \( -name "*.bat" -o -name "*.class" -o -name Thumbs.db -o -name "
 %patch -P4 -p0
 %patch -P6 -p0
 %patch -P7 -p1
+%patch -P8 -p1
 
 # Remove webservices naming resources as it's generally unused
 %{__rm} -rf java/org/apache/naming/factory/webservices
@@ -557,6 +560,9 @@ fi
 
 
 %changelog
+* Thu Aug 27 2026 Jason Rodriguez <jrodriguez@ciq.com> - 1:9.0.87-2.1.1
+- Fix CVE-2026-29146 and CVE-2026-34486: EncryptInterceptor padding oracle and bypass
+
 * Wed Apr 02 2025 Adam Krajcik <akrajcik@redhat.com> - 1:9.0.87-2.el9_5.1
 - Resolves: RHEL-82946
   tomcat: Potential RCE and/or information disclosure and/or information corruption with partial PUT (CVE-2025-24813)

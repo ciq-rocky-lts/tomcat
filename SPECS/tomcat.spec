@@ -32,7 +32,7 @@
 %global major_version 9
 %global minor_version 0
 %global micro_version 87
-%global packdname %{name}-%{major_version}.%{minor_version}.%{micro_version}.redhat-00012-src
+%global packdname %{name}-%{major_version}.%{minor_version}.%{micro_version}.redhat-00013-src
 %global servletspec 4.0
 %global elspec 3.0
 %global tcuid 53
@@ -56,7 +56,7 @@
 Name:          tomcat
 Epoch:         1
 Version:       %{major_version}.%{minor_version}.%{micro_version}
-Release:       3.1%{?dist}.3
+Release:       6.1%{?dist}.1
 Summary:       Apache Servlet/JSP Engine, RI for Servlet %{servletspec}/JSP %{jspspec} API
 
 License:       ASL 2.0
@@ -560,8 +560,19 @@ fi
 
 
 %changelog
+* Sun Nov 15 2026 Jeff Uphoff <juphoff@ciq.com> - 1:9.0.87-6.1.1
+- Move to Red Hat's tomcat-9.0.87.redhat-00013 source (from 9.0.87-6.el9_7.1)
+- Fixes CVE-2025-31651 CVE-2025-55752
+- Keep the CIQ EncryptInterceptor fix (CVE-2026-29146, CVE-2026-34486)
+
 * Thu Aug 27 2026 Jason Rodriguez <jrodriguez@ciq.com> - 1:9.0.87-3.1.3
 - Fix CVE-2026-29146 and CVE-2026-34486: EncryptInterceptor padding oracle and bypass
+
+* Thu Nov 27 2025 Adam Krajcik <akrajcik@redhat.com> - 1:9.0.87-6.el9_7.1
+- Resolves: RHEL-124518
+  tomcat: Directory traversal via rewrite with possible RCE (CVE-2025-55752)
+- Resolves: RHEL-91753
+  tomcat: Bypass of rules in Rewrite Valve (CVE-2025-31651)
 
 * Thu Aug 14 2025 Adam Krajcik <akrajcik@redhat.com> - 1:9.0.87-3.el9_6.3
 - Resolves: RHEL-102200

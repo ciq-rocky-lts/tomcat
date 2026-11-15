@@ -32,7 +32,7 @@
 %global major_version 9
 %global minor_version 0
 %global micro_version 87
-%global packdname %{name}-%{major_version}.%{minor_version}.%{micro_version}.redhat-00008-src
+%global packdname %{name}-%{major_version}.%{minor_version}.%{micro_version}.redhat-00013-src
 %global servletspec 4.0
 %global elspec 3.0
 %global tcuid 53
@@ -56,7 +56,7 @@
 Name:          tomcat
 Epoch:         1
 Version:       %{major_version}.%{minor_version}.%{micro_version}
-Release:       2.1%{?dist}.1
+Release:       6.1%{?dist}.1
 Summary:       Apache Servlet/JSP Engine, RI for Servlet %{servletspec}/JSP %{jspspec} API
 
 License:       ASL 2.0
@@ -560,8 +560,46 @@ fi
 
 
 %changelog
+* Sun Nov 15 2026 Jeff Uphoff <juphoff@ciq.com> - 1:9.0.87-6.1.1
+- Move to Red Hat's tomcat-9.0.87.redhat-00013 source (RHEL 9 tomcat-9.0.87-6.el9_7.1,
+  RHSA-2025:23049) and its tomcat-server (-Dsun.io.useCanonCaches=false); keep the
+  CIQ EncryptInterceptor fix (CVE-2026-29146, CVE-2026-34486)
+- Fixes CVE-2024-56337 CVE-2025-31650 CVE-2025-31651 CVE-2025-48976
+  CVE-2025-48988 CVE-2025-48989 CVE-2025-49125 CVE-2025-52434 CVE-2025-52520
+  CVE-2025-53506 CVE-2025-55752
+
 * Thu Aug 27 2026 Jason Rodriguez <jrodriguez@ciq.com> - 1:9.0.87-2.1.1
 - Fix CVE-2026-29146 and CVE-2026-34486: EncryptInterceptor padding oracle and bypass
+
+* Thu Nov 27 2025 Adam Krajcik <akrajcik@redhat.com> - 1:9.0.87-6.el9_7.1
+- Resolves: RHEL-124518
+  tomcat: Directory traversal via rewrite with possible RCE (CVE-2025-55752)
+- Resolves: RHEL-91753
+  tomcat: Bypass of rules in Rewrite Valve (CVE-2025-31651)
+
+* Thu Aug 14 2025 Adam Krajcik <akrajcik@redhat.com> - 1:9.0.87-6
+- Resolves: RHEL-102201
+  tomcat: http/2 "MadeYouReset" DoS attack through HTTP/2 control frames (CVE-2025-48989)
+
+* Tue Aug 12 2025 Adam Krajcik <akrajcik@redhat.com> - 1:9.0.87-5
+- Resolves: RHEL-108489
+  tomcat: Apache Commons FileUpload DOS via part headers (CVE-2025-48976)
+- Resolves: RHEL-108497
+  tomcat: Dos in multipart upload (CVE-2025-48988)
+- Resolves: RHEL-108505
+  tomcat: Security constraint bypass for pre/post-resources (CVE-2025-49125)
+- Resolves: RHEL-108513
+  tomcat: Denial of service (CVE-2025-52434)
+- Resolves: RHEL-108529
+  tomcat: Denial of service (CVE-2025-52520)
+- Resolves: RHEL-108523
+  tomcat: Denial of service (CVE-2025-53506)
+
+* Mon Jul 21 2025 Adam Krajcik <akrajcik@redhat.com> - 1:9.0.87-4
+- Resolves: RHEL-91763
+  tomcat: DoS via malformed HTTP/2 PRIORITY_UPDATE frame (CVE-2025-31650)
+- Resolves: RHEL-71985
+  tomcat: Incomplete fix for CVE-2024-50379 - RCE due to TOCTOU issue in JSP compilation (CVE-2024-56337)
 
 * Wed Apr 02 2025 Adam Krajcik <akrajcik@redhat.com> - 1:9.0.87-2.el9_5.1
 - Resolves: RHEL-82946

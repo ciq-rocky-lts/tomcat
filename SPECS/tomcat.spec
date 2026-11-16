@@ -56,7 +56,7 @@
 Name:          tomcat
 Epoch:         1
 Version:       %{major_version}.%{minor_version}.%{micro_version}
-Release:       6.1%{?dist}.2
+Release:       6.1%{?dist}.3
 Summary:       Apache Servlet/JSP Engine, RI for Servlet %{servletspec}/JSP %{jspspec} API
 
 License:       ASL 2.0
@@ -114,6 +114,62 @@ Patch21:       %{name}-9.0-CVE-2026-78383.patch
 Patch22:       %{name}-9.0-CVE-2026-79677.patch
 # CIQ: CVE-2026-101296: Always use a simple bind to validate a JNDIRealm user/password
 Patch23:       %{name}-9.0-CVE-2026-101296.patch
+# CIQ: CVE-2026-93446: Fix possible TLS 1.3 connection failures
+Patch24:       %{name}-9.0-CVE-2026-93446.patch
+# CIQ: CVE-2025-46701: CGI servlet resolves scripts via WebResources
+Patch25:       %{name}-9.0-CVE-2025-46701.patch
+# CIQ: CVE-2025-55668: Rewrite valve session fixation
+Patch26:       %{name}-9.0-CVE-2025-55668.patch
+# CIQ: CVE-2025-55754: Escape control characters in log messages
+Patch27:       %{name}-9.0-CVE-2025-55754.patch
+# CIQ: CVE-2025-61795: Clean up temporary files after a failed multipart upload
+Patch28:       %{name}-9.0-CVE-2025-61795.patch
+# CIQ: CVE-2025-66614: Check the Host header against the TLS SNI host name
+Patch29:       %{name}-9.0-CVE-2025-66614.patch
+# CIQ: CVE-2026-24733: Reject HTTP/0.9 requests that don't use GET
+Patch30:       %{name}-9.0-CVE-2026-24733.patch
+# CIQ: CVE-2026-24880: Validate chunk extensions
+Patch31:       %{name}-9.0-CVE-2026-24880.patch
+# CIQ: CVE-2026-25854: LoadBalancerDrainingValve open redirect
+Patch32:       %{name}-9.0-CVE-2026-25854.patch
+# CIQ: CVE-2026-34483: Escape request URI and query string in access logs
+Patch33:       %{name}-9.0-CVE-2026-34483.patch
+# CIQ: CVE-2026-34487: Don't log the Kubernetes bearer token
+Patch34:       %{name}-9.0-CVE-2026-34487.patch
+# CIQ: CVE-2026-42498: WebSocket client authentication header exposure
+Patch35:       %{name}-9.0-CVE-2026-42498.patch
+# CIQ: CVE-2026-43512: DIGEST authentication of unknown users
+Patch36:       %{name}-9.0-CVE-2026-43512.patch
+# CIQ: CVE-2026-43513: LockOutRealm user names are case-insensitive by default
+Patch37:       %{name}-9.0-CVE-2026-43513.patch
+# CIQ: CVE-2026-43514: Compare the AJP secret in constant time
+Patch38:       %{name}-9.0-CVE-2026-43514.patch
+# CIQ: CVE-2026-43515: Apply all matching extension-based security constraints
+Patch39:       %{name}-9.0-CVE-2026-43515.patch
+# CIQ: CVE-2026-53404: Fix RewriteValve [OR] (ornext) condition handling
+Patch40:       %{name}-9.0-CVE-2026-53404.patch
+# CIQ: CVE-2026-55956: Honour methods on security constraints mapped to "/"
+Patch41:       %{name}-9.0-CVE-2026-55956.patch
+# CIQ: CVE-2026-59083: RewriteValve must not decode '+' as a space
+Patch42:       %{name}-9.0-CVE-2026-59083.patch
+# CIQ: CVE-2026-65183: Create Unix domain sockets without a permissions race (NIO)
+Patch43:       %{name}-9.0-CVE-2026-65183.patch
+# CIQ: CVE-2026-80353: Create Unix domain sockets without a permissions race (APR)
+Patch44:       %{name}-9.0-CVE-2026-80353.patch
+# CIQ: CVE-2026-65905: DIGEST nonce count window allowed limited replay
+Patch45:       %{name}-9.0-CVE-2026-65905.patch
+# CIQ: CVE-2026-66422: Keep security-role-ref aliases out of declarative constraints
+Patch46:       %{name}-9.0-CVE-2026-66422.patch
+# CIQ: CVE-2026-68525: Re-check constraints when FORM auth restores another method
+Patch47:       %{name}-9.0-CVE-2026-68525.patch
+# CIQ: CVE-2026-73581: OpenSSL TLS ignores CRLs for keystore certificates
+Patch48:       %{name}-9.0-CVE-2026-73581.patch
+# CIQ: CVE-2026-74049: Jasper <c:redirect> tag plugin must end the page
+Patch49:       %{name}-9.0-CVE-2026-74049.patch
+# CIQ: CVE-2026-77756: Reject Transfer-Encoding in HTTP/1.0 requests
+Patch50:       %{name}-9.0-CVE-2026-77756.patch
+# CIQ: CVE-2026-77762: Detach the HPACK emitter from a reset HTTP/2 stream
+Patch51:       %{name}-9.0-CVE-2026-77762.patch
 
 BuildArch:     noarch
 
@@ -246,6 +302,34 @@ find . -type f \( -name "*.bat" -o -name "*.class" -o -name Thumbs.db -o -name "
 %patch -P21 -p1
 %patch -P22 -p1
 %patch -P23 -p1
+%patch -P24 -p1
+%patch -P25 -p1
+%patch -P26 -p1
+%patch -P27 -p1
+%patch -P28 -p1
+%patch -P29 -p1
+%patch -P30 -p1
+%patch -P31 -p1
+%patch -P32 -p1
+%patch -P33 -p1
+%patch -P34 -p1
+%patch -P35 -p1
+%patch -P36 -p1
+%patch -P37 -p1
+%patch -P38 -p1
+%patch -P39 -p1
+%patch -P40 -p1
+%patch -P41 -p1
+%patch -P42 -p1
+%patch -P43 -p1
+%patch -P44 -p1
+%patch -P45 -p1
+%patch -P46 -p1
+%patch -P47 -p1
+%patch -P48 -p1
+%patch -P49 -p1
+%patch -P50 -p1
+%patch -P51 -p1
 
 # Remove webservices naming resources as it's generally unused
 %{__rm} -rf java/org/apache/naming/factory/webservices
@@ -605,6 +689,20 @@ fi
 
 
 %changelog
+* Mon Nov 16 2026 Jeff Uphoff <juphoff@ciq.com> - 1:9.0.87-6.1.3
+- Backport upstream fixes: CVE-2025-46701, CVE-2025-55668, CVE-2025-55754,
+  CVE-2025-61795, CVE-2025-66614, CVE-2026-24733, CVE-2026-24880,
+  CVE-2026-25854, CVE-2026-32990, CVE-2026-34483, CVE-2026-34487,
+  CVE-2026-42498, CVE-2026-43512, CVE-2026-43513, CVE-2026-43514,
+  CVE-2026-43515, CVE-2026-53404, CVE-2026-55956, CVE-2026-59083,
+  CVE-2026-65183, CVE-2026-65905, CVE-2026-66422, CVE-2026-68525,
+  CVE-2026-73581, CVE-2026-74049, CVE-2026-77756, CVE-2026-77762,
+  CVE-2026-80353, CVE-2026-93446
+- New Connector attribute strictSni (default true): TLS requests whose
+  Host does not match the SNI host name's certificate configuration are
+  rejected; set strictSni="false" on the Connector to restore the
+  previous behaviour
+
 * Mon Nov 16 2026 Jeff Uphoff <juphoff@ciq.com> - 1:9.0.87-6.1.2
 - Backport upstream fixes: CVE-2024-52316, CVE-2026-41284, CVE-2026-41293,
   CVE-2026-55957, CVE-2026-65182, CVE-2026-65927, CVE-2026-68569,

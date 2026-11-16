@@ -56,7 +56,7 @@
 Name:          tomcat
 Epoch:         1
 Version:       %{major_version}.%{minor_version}.%{micro_version}
-Release:       6.1%{?dist}.1
+Release:       6.1%{?dist}.2
 Summary:       Apache Servlet/JSP Engine, RI for Servlet %{servletspec}/JSP %{jspspec} API
 
 License:       ASL 2.0
@@ -84,6 +84,36 @@ Patch6:        %{name}-%{major_version}.%{minor_version}-bnd-annotation.patch
 Patch7:        JmxRemoteLifecycleListener.patch
 # CVE-2026-29146, CVE-2026-34486 — upstream backport
 Patch8:        %{name}-9.0-CVE-2026-29146.patch
+# CIQ: CVE-2024-52316: Set 500 status when Jakarta Authentication fails with an exception
+Patch9:        %{name}-9.0-CVE-2024-52316.patch
+# CIQ: CVE-2026-55957: Fix credential validation when JNDIRealm uses GSSAPI
+Patch10:       %{name}-9.0-CVE-2026-55957.patch
+# CIQ: CVE-2026-41284: Add a configurable limit for WebDAV LOCK/PROPFIND bodies
+Patch11:       %{name}-9.0-CVE-2026-41284.patch
+# CIQ: Fix an edge case HTTP/2 HPACK header decoding bug
+Patch12:       %{name}-9.0-http2-hpack-huffman-eos.patch
+# CIQ: Optimise conversion of HTTP/2 header field names to lower case
+Patch13:       %{name}-9.0-http2-hpack-encoder-lowercase.patch
+# CIQ: CVE-2026-41293: Validate HTTP/2 request header field names and values
+Patch14:       %{name}-9.0-CVE-2026-41293.patch
+# CIQ: CVE-2026-65182: Ensure security constraint with longest matching path is selected
+Patch15:       %{name}-9.0-CVE-2026-65182.patch
+# CIQ: CVE-2026-65927: Fix off-by-one in RewriteValve [N] flag handling
+Patch16:       %{name}-9.0-CVE-2026-65927.patch
+# CIQ: CVE-2026-68569: Fail principal lookup for unknown users in DataSourceRealm/JDBCRealm
+Patch17:       %{name}-9.0-CVE-2026-68569.patch
+# CIQ: CVE-2026-68763: Fix an allocation leak in the HTTP/2 backlog tracking on stream reset
+Patch18:       %{name}-9.0-CVE-2026-68763.patch
+# CIQ: CVE-2026-76183: Do not parse WebSocket request URIs as URI templates
+Patch19:       %{name}-9.0-CVE-2026-76183.patch
+# CIQ: CVE-2026-77791: Reduce CPU usage while sending WebSocket close message
+Patch20:       %{name}-9.0-CVE-2026-77791.patch
+# CIQ: CVE-2026-78383: Don't swallow AJP request body on error conditions
+Patch21:       %{name}-9.0-CVE-2026-78383.patch
+# CIQ: CVE-2026-79677: Fix lost timeouts for asynchronous WebSocket writes
+Patch22:       %{name}-9.0-CVE-2026-79677.patch
+# CIQ: CVE-2026-101296: Always use a simple bind to validate a JNDIRealm user/password
+Patch23:       %{name}-9.0-CVE-2026-101296.patch
 
 BuildArch:     noarch
 
@@ -201,6 +231,21 @@ find . -type f \( -name "*.bat" -o -name "*.class" -o -name Thumbs.db -o -name "
 %patch -P6 -p0
 %patch -P7 -p1
 %patch -P8 -p1
+%patch -P9 -p1
+%patch -P10 -p1
+%patch -P11 -p1
+%patch -P12 -p1
+%patch -P13 -p1
+%patch -P14 -p1
+%patch -P15 -p1
+%patch -P16 -p1
+%patch -P17 -p1
+%patch -P18 -p1
+%patch -P19 -p1
+%patch -P20 -p1
+%patch -P21 -p1
+%patch -P22 -p1
+%patch -P23 -p1
 
 # Remove webservices naming resources as it's generally unused
 %{__rm} -rf java/org/apache/naming/factory/webservices
@@ -560,6 +605,14 @@ fi
 
 
 %changelog
+* Mon Nov 16 2026 Jeff Uphoff <juphoff@ciq.com> - 1:9.0.87-6.1.2
+- Backport upstream fixes: CVE-2024-52316, CVE-2026-41284, CVE-2026-41293,
+  CVE-2026-55957, CVE-2026-65182, CVE-2026-65927, CVE-2026-68569,
+  CVE-2026-68763, CVE-2026-76183, CVE-2026-77791, CVE-2026-78383,
+  CVE-2026-79677, CVE-2026-101296
+- Backport upstream HTTP/2 HPACK prerequisites of the CVE-2026-41293 fix:
+  Huffman EOS decoding edge case, header name lower-casing in the encoder
+
 * Sun Nov 15 2026 Jeff Uphoff <juphoff@ciq.com> - 1:9.0.87-6.1.1
 - Move to Red Hat's tomcat-9.0.87.redhat-00013 source (from 9.0.87-6.el9_7.1)
 - Fixes CVE-2025-31651 CVE-2025-55752

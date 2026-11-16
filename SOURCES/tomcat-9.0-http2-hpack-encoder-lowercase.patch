@@ -1,0 +1,162 @@
+Optimise conversion of HTTP/2 header field names to lower case
+
+HpackEncoder.encode() already lower-cases header names, so the
+HPACK writers no longer lower-case them again. No change for Tomcat's
+own response encoding; lets tests send upper case field names.
+
+Upstream: 7b51ac0f20 (9.0.x, 9.0.118); prerequisite of cf9452443b
+  (CVE-2026-41293). changelog.xml hunk dropped.
+
+Backported for CIQ LTS 9.6 (tomcat 9.0.87.redhat-00013).
+
+diff --git a/java/org/apache/coyote/http2/HPackHuffman.java b/java/org/apache/coyote/http2/HPackHuffman.java
+index f2ee567..390af91 100644
+--- a/java/org/apache/coyote/http2/HPackHuffman.java
++++ b/java/org/apache/coyote/http2/HPackHuffman.java
+@@ -19,6 +19,7 @@ package org.apache.coyote.http2;
+ import java.nio.ByteBuffer;
+ import java.util.Arrays;
+ import java.util.HashSet;
++import java.util.Locale;
+ import java.util.Set;
+ 
+ import org.apache.tomcat.util.res.StringManager;
+@@ -437,8 +438,29 @@ public class HPackHuffman {
+      * @param forceLowercase If the string should be encoded in lower case
+      *
+      * @return true if encoding succeeded
++     *
++     * @deprecated Unused. This method will be removed in Tomcat 12 onwards.
+      */
++    @Deprecated
+     public static boolean encode(ByteBuffer buffer, String toEncode, boolean forceLowercase) {
++        if (forceLowercase) {
++            return encode(buffer, toEncode.toLowerCase(Locale.ENGLISH));
++        } else {
++            return encode(buffer, toEncode);
++        }
++    }
++
++
++    /**
++     * Encodes the given string into the buffer. If there is not enough space in the buffer, or the encoded version is
++     * bigger than the original it will return false and not modify the buffers position.
++     *
++     * @param buffer         The buffer to encode into
++     * @param toEncode       The string to encode
++     *
++     * @return true if encoding succeeded
++     */
++    public static boolean encode(ByteBuffer buffer, String toEncode) {
+         if (buffer.remaining() <= toEncode.length()) {
+             return false;
+         }
+@@ -453,9 +475,6 @@ public class HPackHuffman {
+                 throw new IllegalArgumentException(
+                         sm.getString("hpack.invalidCharacter", Character.toString(c), Integer.valueOf(c)));
+             }
+-            if (forceLowercase) {
+-                c = Hpack.toLower(c);
+-            }
+             HuffmanCode code = HUFFMAN_CODES[c];
+             length += code.length;
+         }
+@@ -469,9 +488,6 @@ public class HPackHuffman {
+         byte currentBufferByte = 0;
+         for (int i = 0; i < toEncode.length(); ++i) {
+             char c = toEncode.charAt(i);
+-            if (forceLowercase) {
+-                c = Hpack.toLower(c);
+-            }
+             HuffmanCode code = HUFFMAN_CODES[c];
+             if (code.length + bytePos <= 8) {
+                 // it fits in the current byte
+diff --git a/java/org/apache/coyote/http2/Hpack.java b/java/org/apache/coyote/http2/Hpack.java
+index b0ec92e..fabb7ce 100644
+--- a/java/org/apache/coyote/http2/Hpack.java
++++ b/java/org/apache/coyote/http2/Hpack.java
+@@ -202,7 +202,10 @@ final class Hpack {
+         }
+     }
+ 
+-
++    /*
++     * Unused. Will be removed in Tomcat 12 onwards.
++     */
++    @Deprecated
+     static char toLower(char c) {
+         if (c >= 'A' && c <= 'Z') {
+             return (char) (c + LOWER_DIFF);
+@@ -210,7 +213,7 @@ final class Hpack {
+         return c;
+     }
+ 
++
+     private Hpack() {
+     }
+-
+ }
+diff --git a/java/org/apache/coyote/http2/HpackEncoder.java b/java/org/apache/coyote/http2/HpackEncoder.java
+index 391423e..e4b99c5 100644
+--- a/java/org/apache/coyote/http2/HpackEncoder.java
++++ b/java/org/apache/coyote/http2/HpackEncoder.java
+@@ -136,8 +136,11 @@ class HpackEncoder {
+             }
+         }
+         while (it < currentHeaders.size()) {
+-            // FIXME: Review lowercase policy
+-            String headerName = headers.getName(it).toString().toLowerCase(Locale.US);
++            /*
++             * Need to ensure header names are lower case from this point onwards as table lookups etc. are
++             * case-sensitive.
++             */
++            String headerName = headers.getName(it).toString().toLowerCase(Locale.ENGLISH);
+             boolean skip = false;
+             if (firstPass) {
+                 if (headerName.charAt(0) != ':') {
+@@ -211,23 +214,29 @@ class HpackEncoder {
+         return State.COMPLETE;
+     }
+ 
++    /*
++     * headerName must be lower case by the time this method is called.
++     *
++     * The exception to the above rule is test cases which may deliberately use some upper case characters to test how
++     * Tomcat responds to such invalid input.
++     */
+     private void writeHuffmanEncodableName(ByteBuffer target, String headerName) {
+         if (hpackHeaderFunction.shouldUseHuffman(headerName)) {
+-            if (HPackHuffman.encode(target, headerName, true)) {
++            if (HPackHuffman.encode(target, headerName)) {
+                 return;
+             }
+         }
+         target.put((byte) 0); // to use encodeInteger we need to place the first byte in the buffer.
+         Hpack.encodeInteger(target, headerName.length(), 7);
+         for (int j = 0; j < headerName.length(); ++j) {
+-            target.put((byte) Hpack.toLower(headerName.charAt(j)));
++            target.put((byte) headerName.charAt(j));
+         }
+ 
+     }
+ 
+     private void writeHuffmanEncodableValue(ByteBuffer target, String headerName, String val) {
+         if (hpackHeaderFunction.shouldUseHuffman(headerName, val)) {
+-            if (!HPackHuffman.encode(target, val, false)) {
++            if (!HPackHuffman.encode(target, val)) {
+                 writeValueString(target, val);
+             }
+         } else {
+diff --git a/test/org/apache/coyote/http2/TestHPackHuffman.java b/test/org/apache/coyote/http2/TestHPackHuffman.java
+index 7b970d4..5aaf6ac 100644
+--- a/test/org/apache/coyote/http2/TestHPackHuffman.java
++++ b/test/org/apache/coyote/http2/TestHPackHuffman.java
+@@ -31,7 +31,7 @@ public class TestHPackHuffman {
+     public void testValueLeftBrace() throws Exception {
+         ByteBuffer buf = ByteBuffer.allocate(10);
+         String data = "x-value{";
+-        HPackHuffman.encode(buf, data, false);
++        HPackHuffman.encode(buf, data);
+ 
+         buf.flip();
+         // Remove the header byte (in Tomcat this is parsed before the bytes are passed to the HPACK decoder)

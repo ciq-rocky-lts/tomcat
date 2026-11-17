@@ -56,7 +56,7 @@
 Name:          tomcat
 Epoch:         1
 Version:       %{major_version}.%{minor_version}.%{micro_version}
-Release:       6.1%{?dist}.2
+Release:       6.1%{?dist}.3
 Summary:       Apache Servlet/JSP Engine, RI for Servlet %{servletspec}/JSP %{jspspec} API
 
 License:       ASL 2.0
@@ -170,6 +170,12 @@ Patch49:       %{name}-9.0-CVE-2026-74049.patch
 Patch50:       %{name}-9.0-CVE-2026-77756.patch
 # CIQ: CVE-2026-77762: Detach the HPACK emitter from a reset HTTP/2 stream
 Patch51:       %{name}-9.0-CVE-2026-77762.patch
+# CIQ: CVE-2026-55276: Include special roles and empty auth-constraint in effective web.xml
+Patch52:       %{name}-9.0-CVE-2026-55276.patch
+# CIQ: CVE-2026-73180: Close WebSocket sessions when a rotated HTTP session ends
+Patch53:       %{name}-9.0-CVE-2026-73180.patch
+# CIQ: CVE-2026-87022: Do not drop permessage-deflate data after early BFINAL
+Patch54:       %{name}-9.0-CVE-2026-87022.patch
 
 BuildArch:     noarch
 
@@ -330,6 +336,9 @@ find . -type f \( -name "*.bat" -o -name "*.class" -o -name Thumbs.db -o -name "
 %patch -P49 -p1
 %patch -P50 -p1
 %patch -P51 -p1
+%patch -P52 -p1
+%patch -P53 -p1
+%patch -P54 -p1
 
 # Remove webservices naming resources as it's generally unused
 %{__rm} -rf java/org/apache/naming/factory/webservices
@@ -689,6 +698,10 @@ fi
 
 
 %changelog
+* Tue Nov 17 2026 Jeff Uphoff <juphoff@ciq.com> - 1:9.0.87-6.1.3
+- Backport upstream fixes (hand-adapted to 9.0.87): CVE-2026-55276,
+  CVE-2026-73180, CVE-2026-87022
+
 * Mon Nov 16 2026 Jeff Uphoff <juphoff@ciq.com> - 1:9.0.87-6.1.2
 - Backport upstream fixes (as in LTS 9.6 6.1.2/6.1.3): CVE-2024-52316,
   CVE-2025-46701, CVE-2025-55668, CVE-2025-55754, CVE-2025-61795,

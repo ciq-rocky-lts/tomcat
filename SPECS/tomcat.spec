@@ -56,7 +56,7 @@
 Name:          tomcat
 Epoch:         1
 Version:       %{major_version}.%{minor_version}.%{micro_version}
-Release:       6.1%{?dist}.1
+Release:       6.1%{?dist}.2
 Summary:       Apache Servlet/JSP Engine, RI for Servlet %{servletspec}/JSP %{jspspec} API
 
 License:       ASL 2.0
@@ -84,6 +84,92 @@ Patch6:        %{name}-%{major_version}.%{minor_version}-bnd-annotation.patch
 Patch7:        JmxRemoteLifecycleListener.patch
 # CVE-2026-29146, CVE-2026-34486 — upstream backport
 Patch8:        %{name}-9.0-CVE-2026-29146.patch
+# CIQ: CVE-2024-52316: Set 500 status when Jakarta Authentication fails with an exception
+Patch9:        %{name}-9.0-CVE-2024-52316.patch
+# CIQ: CVE-2026-55957: Fix credential validation when JNDIRealm uses GSSAPI
+Patch10:       %{name}-9.0-CVE-2026-55957.patch
+# CIQ: CVE-2026-41284: Add a configurable limit for WebDAV LOCK/PROPFIND bodies
+Patch11:       %{name}-9.0-CVE-2026-41284.patch
+# CIQ: Fix an edge case HTTP/2 HPACK header decoding bug
+Patch12:       %{name}-9.0-http2-hpack-huffman-eos.patch
+# CIQ: Optimise conversion of HTTP/2 header field names to lower case
+Patch13:       %{name}-9.0-http2-hpack-encoder-lowercase.patch
+# CIQ: CVE-2026-41293: Validate HTTP/2 request header field names and values
+Patch14:       %{name}-9.0-CVE-2026-41293.patch
+# CIQ: CVE-2026-65182: Ensure security constraint with longest matching path is selected
+Patch15:       %{name}-9.0-CVE-2026-65182.patch
+# CIQ: CVE-2026-65927: Fix off-by-one in RewriteValve [N] flag handling
+Patch16:       %{name}-9.0-CVE-2026-65927.patch
+# CIQ: CVE-2026-68569: Fail principal lookup for unknown users in DataSourceRealm/JDBCRealm
+Patch17:       %{name}-9.0-CVE-2026-68569.patch
+# CIQ: CVE-2026-68763: Fix an allocation leak in the HTTP/2 backlog tracking on stream reset
+Patch18:       %{name}-9.0-CVE-2026-68763.patch
+# CIQ: CVE-2026-76183: Do not parse WebSocket request URIs as URI templates
+Patch19:       %{name}-9.0-CVE-2026-76183.patch
+# CIQ: CVE-2026-77791: Reduce CPU usage while sending WebSocket close message
+Patch20:       %{name}-9.0-CVE-2026-77791.patch
+# CIQ: CVE-2026-78383: Don't swallow AJP request body on error conditions
+Patch21:       %{name}-9.0-CVE-2026-78383.patch
+# CIQ: CVE-2026-79677: Fix lost timeouts for asynchronous WebSocket writes
+Patch22:       %{name}-9.0-CVE-2026-79677.patch
+# CIQ: CVE-2026-101296: Always use a simple bind to validate a JNDIRealm user/password
+Patch23:       %{name}-9.0-CVE-2026-101296.patch
+# CIQ: CVE-2026-93446: Fix possible TLS 1.3 connection failures
+Patch24:       %{name}-9.0-CVE-2026-93446.patch
+# CIQ: CVE-2025-46701: CGI servlet resolves scripts via WebResources
+Patch25:       %{name}-9.0-CVE-2025-46701.patch
+# CIQ: CVE-2025-55668: Rewrite valve session fixation
+Patch26:       %{name}-9.0-CVE-2025-55668.patch
+# CIQ: CVE-2025-55754: Escape control characters in log messages
+Patch27:       %{name}-9.0-CVE-2025-55754.patch
+# CIQ: CVE-2025-61795: Clean up temporary files after a failed multipart upload
+Patch28:       %{name}-9.0-CVE-2025-61795.patch
+# CIQ: CVE-2025-66614: Check the Host header against the TLS SNI host name
+Patch29:       %{name}-9.0-CVE-2025-66614.patch
+# CIQ: CVE-2026-24733: Reject HTTP/0.9 requests that don't use GET
+Patch30:       %{name}-9.0-CVE-2026-24733.patch
+# CIQ: CVE-2026-24880: Validate chunk extensions
+Patch31:       %{name}-9.0-CVE-2026-24880.patch
+# CIQ: CVE-2026-25854: LoadBalancerDrainingValve open redirect
+Patch32:       %{name}-9.0-CVE-2026-25854.patch
+# CIQ: CVE-2026-34483: Escape request URI and query string in access logs
+Patch33:       %{name}-9.0-CVE-2026-34483.patch
+# CIQ: CVE-2026-34487: Don't log the Kubernetes bearer token
+Patch34:       %{name}-9.0-CVE-2026-34487.patch
+# CIQ: CVE-2026-42498: WebSocket client authentication header exposure
+Patch35:       %{name}-9.0-CVE-2026-42498.patch
+# CIQ: CVE-2026-43512: DIGEST authentication of unknown users
+Patch36:       %{name}-9.0-CVE-2026-43512.patch
+# CIQ: CVE-2026-43513: LockOutRealm user names are case-insensitive by default
+Patch37:       %{name}-9.0-CVE-2026-43513.patch
+# CIQ: CVE-2026-43514: Compare the AJP secret in constant time
+Patch38:       %{name}-9.0-CVE-2026-43514.patch
+# CIQ: CVE-2026-43515: Apply all matching extension-based security constraints
+Patch39:       %{name}-9.0-CVE-2026-43515.patch
+# CIQ: CVE-2026-53404: Fix RewriteValve [OR] (ornext) condition handling
+Patch40:       %{name}-9.0-CVE-2026-53404.patch
+# CIQ: CVE-2026-55956: Honour methods on security constraints mapped to "/"
+Patch41:       %{name}-9.0-CVE-2026-55956.patch
+# CIQ: CVE-2026-59083: RewriteValve must not decode '+' as a space
+Patch42:       %{name}-9.0-CVE-2026-59083.patch
+# CIQ: CVE-2026-65183: Create Unix domain sockets without a permissions race (NIO)
+Patch43:       %{name}-9.0-CVE-2026-65183.patch
+# CIQ: CVE-2026-80353: Create Unix domain sockets without a permissions race (APR)
+Patch44:       %{name}-9.0-CVE-2026-80353.patch
+# CIQ: CVE-2026-65905: DIGEST nonce count window allowed limited replay
+Patch45:       %{name}-9.0-CVE-2026-65905.patch
+# CIQ: CVE-2026-66422: Keep security-role-ref aliases out of declarative constraints
+Patch46:       %{name}-9.0-CVE-2026-66422.patch
+# CIQ: CVE-2026-68525: Re-check constraints when FORM auth restores another method
+Patch47:       %{name}-9.0-CVE-2026-68525.patch
+# CIQ: CVE-2026-73581: OpenSSL TLS ignores CRLs for keystore certificates
+Patch48:       %{name}-9.0-CVE-2026-73581.patch
+# CIQ: CVE-2026-74049: Jasper <c:redirect> tag plugin must end the page
+Patch49:       %{name}-9.0-CVE-2026-74049.patch
+# CIQ: CVE-2026-77756: Reject Transfer-Encoding in HTTP/1.0 requests
+Patch50:       %{name}-9.0-CVE-2026-77756.patch
+# CIQ: CVE-2026-77762: Detach the HPACK emitter from a reset HTTP/2 stream
+Patch51:       %{name}-9.0-CVE-2026-77762.patch
 
 BuildArch:     noarch
 
@@ -201,6 +287,49 @@ find . -type f \( -name "*.bat" -o -name "*.class" -o -name Thumbs.db -o -name "
 %patch -P6 -p0
 %patch -P7 -p1
 %patch -P8 -p1
+%patch -P9 -p1
+%patch -P10 -p1
+%patch -P11 -p1
+%patch -P12 -p1
+%patch -P13 -p1
+%patch -P14 -p1
+%patch -P15 -p1
+%patch -P16 -p1
+%patch -P17 -p1
+%patch -P18 -p1
+%patch -P19 -p1
+%patch -P20 -p1
+%patch -P21 -p1
+%patch -P22 -p1
+%patch -P23 -p1
+%patch -P24 -p1
+%patch -P25 -p1
+%patch -P26 -p1
+%patch -P27 -p1
+%patch -P28 -p1
+%patch -P29 -p1
+%patch -P30 -p1
+%patch -P31 -p1
+%patch -P32 -p1
+%patch -P33 -p1
+%patch -P34 -p1
+%patch -P35 -p1
+%patch -P36 -p1
+%patch -P37 -p1
+%patch -P38 -p1
+%patch -P39 -p1
+%patch -P40 -p1
+%patch -P41 -p1
+%patch -P42 -p1
+%patch -P43 -p1
+%patch -P44 -p1
+%patch -P45 -p1
+%patch -P46 -p1
+%patch -P47 -p1
+%patch -P48 -p1
+%patch -P49 -p1
+%patch -P50 -p1
+%patch -P51 -p1
 
 # Remove webservices naming resources as it's generally unused
 %{__rm} -rf java/org/apache/naming/factory/webservices
@@ -560,6 +689,26 @@ fi
 
 
 %changelog
+* Mon Nov 16 2026 Jeff Uphoff <juphoff@ciq.com> - 1:9.0.87-6.1.2
+- Backport upstream fixes (as in LTS 9.6 6.1.2/6.1.3): CVE-2024-52316,
+  CVE-2025-46701, CVE-2025-55668, CVE-2025-55754, CVE-2025-61795,
+  CVE-2025-66614, CVE-2026-24733, CVE-2026-24880, CVE-2026-25854,
+  CVE-2026-32990, CVE-2026-34483, CVE-2026-34487, CVE-2026-41284,
+  CVE-2026-41293, CVE-2026-42498, CVE-2026-43512, CVE-2026-43513,
+  CVE-2026-43514, CVE-2026-43515, CVE-2026-53404, CVE-2026-55956,
+  CVE-2026-55957, CVE-2026-59083, CVE-2026-65182, CVE-2026-65183,
+  CVE-2026-65905, CVE-2026-65927, CVE-2026-66422, CVE-2026-68525,
+  CVE-2026-68569, CVE-2026-68763, CVE-2026-73581, CVE-2026-74049,
+  CVE-2026-76183, CVE-2026-77756, CVE-2026-77762, CVE-2026-77791,
+  CVE-2026-78383, CVE-2026-79677, CVE-2026-80353, CVE-2026-93446,
+  CVE-2026-101296
+- Backport upstream HTTP/2 HPACK prerequisites of the CVE-2026-41293 fix:
+  Huffman EOS decoding edge case, header name lower-casing in the encoder
+- New Connector attribute strictSni (default true): TLS requests whose
+  Host does not match the SNI host name's certificate configuration are
+  rejected; set strictSni="false" on the Connector to restore the
+  previous behaviour
+
 * Sun Nov 15 2026 Jeff Uphoff <juphoff@ciq.com> - 1:9.0.87-6.1.1
 - Move to Red Hat's tomcat-9.0.87.redhat-00013 source (RHEL 9 tomcat-9.0.87-6.el9_7.1,
   RHSA-2025:23049) and its tomcat-server (-Dsun.io.useCanonCaches=false); keep the

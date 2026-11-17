@@ -1,0 +1,90 @@
+Fix an edge case HTTP/2 HPACK header decoding bug
+
+Huffman decoding did not reset the EOS bit count after emitting a
+character, so some valid Huffman-encoded strings (e.g. "x-value{") were
+rejected with an HPACK decoding error (connection GOAWAY).
+
+Upstream: c547dcd9fa (9.0.x, 9.0.118); prerequisite of cf9452443b
+  (CVE-2026-41293). changelog.xml hunk dropped.
+
+Backported for CIQ LTS 9.6 (tomcat 9.0.87.redhat-00013).
+
+diff --git a/java/org/apache/coyote/http2/HPackHuffman.java b/java/org/apache/coyote/http2/HPackHuffman.java
+index e5ce482..f2ee567 100644
+--- a/java/org/apache/coyote/http2/HPackHuffman.java
++++ b/java/org/apache/coyote/http2/HPackHuffman.java
+@@ -387,11 +387,14 @@ public class HPackHuffman {
+                     if ((val & LOW_TERMINAL_BIT) == 0) {
+                         treePos = val & LOW_MASK;
+                         eosBits = false;
++                        // Found a zero, can't be counting EOS bits
+                         eosBitCount = 0;
+                     } else {
+                         target.append((char) (val & LOW_MASK));
+                         treePos = 0;
+                         eosBits = true;
++                        // Output a character, reset eosBitCount
++                        eosBitCount = 0;
+                     }
+                 } else {
+                     if (eosBits) {
+@@ -409,6 +412,8 @@ public class HPackHuffman {
+                         target.append((char) ((val >> 16) & LOW_MASK));
+                         treePos = 0;
+                         eosBits = true;
++                        // Output a character, reset eosBitCount
++                        eosBitCount = 0;
+                     }
+                 }
+                 bitPos--;
+diff --git a/test/org/apache/coyote/http2/TestHPackHuffman.java b/test/org/apache/coyote/http2/TestHPackHuffman.java
+new file mode 100644
+index 0000000..7b970d4
+--- /dev/null
++++ b/test/org/apache/coyote/http2/TestHPackHuffman.java
+@@ -0,0 +1,45 @@
++/*
++ *  Licensed to the Apache Software Foundation (ASF) under one or more
++ *  contributor license agreements.  See the NOTICE file distributed with
++ *  this work for additional information regarding copyright ownership.
++ *  The ASF licenses this file to You under the Apache License, Version 2.0
++ *  (the "License"); you may not use this file except in compliance with
++ *  the License.  You may obtain a copy of the License at
++ *
++ *      http://www.apache.org/licenses/LICENSE-2.0
++ *
++ *  Unless required by applicable law or agreed to in writing, software
++ *  distributed under the License is distributed on an "AS IS" BASIS,
++ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ *  See the License for the specific language governing permissions and
++ *  limitations under the License.
++ */
++package org.apache.coyote.http2;
++
++import java.nio.ByteBuffer;
++
++import org.junit.Assert;
++import org.junit.Test;
++
++
++public class TestHPackHuffman {
++
++    /*
++     * This specific String exposed an edge case that triggered an unexpected HPACK parsing failure.
++     */
++    @Test
++    public void testValueLeftBrace() throws Exception {
++        ByteBuffer buf = ByteBuffer.allocate(10);
++        String data = "x-value{";
++        HPackHuffman.encode(buf, data, false);
++
++        buf.flip();
++        // Remove the header byte (in Tomcat this is parsed before the bytes are passed to the HPACK decoder)
++        buf.get();
++
++        StringBuilder target = new StringBuilder();
++        HPackHuffman.decode(buf, buf.remaining(), target);
++
++        Assert.assertEquals("Value changed after encode/decode roundtrip", data, target.toString());
++    }
++}

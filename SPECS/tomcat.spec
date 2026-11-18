@@ -54,7 +54,7 @@
 Name:          tomcat
 Epoch:         0
 Version:       %{major_version}.%{minor_version}.%{micro_version}
-Release:       17%{?dist}
+Release:       17.1%{?dist}
 Summary:       Apache Servlet/JSP Engine, RI for Servlet %{servletspec}/JSP %{jspspec} API
 
 Group:         System Environment/Daemons
@@ -114,6 +114,36 @@ Patch26: %{name}-7.0.76-CVE-2023-28709.patch
 Patch27: %{name}-7.0.76-CVE-2023-45648.patch
 Patch28: %{name}-7.0.76-CVE-2024-23672.patch
 Patch29: %{name}-7.0.76-CVE-2023-46589.patch
+Patch30: %{name}-7.0.76-CVE-2023-41080.patch
+Patch31: %{name}-7.0.76-CVE-2026-43512.patch
+Patch32: %{name}-7.0.76-CVE-2026-43513.patch
+Patch33: %{name}-7.0.76-CVE-2026-43515.patch
+Patch34: %{name}-7.0.76-CVE-2026-55276.patch
+Patch35: %{name}-7.0.76-CVE-2026-55956.patch
+Patch36: %{name}-7.0.76-CVE-2026-65182.patch
+Patch37: %{name}-7.0.76-CVE-2026-65905.patch
+Patch38: %{name}-7.0.76-CVE-2026-68569.patch
+Patch39: %{name}-7.0.76-CVE-2026-101296.patch
+Patch40: %{name}-7.0.76-CVE-2023-28708.patch
+Patch41: %{name}-7.0.76-CVE-2023-42795.patch
+Patch42: %{name}-7.0.76-CVE-2025-48976.patch
+Patch43: %{name}-7.0.76-CVE-2025-48988.patch
+Patch44: %{name}-7.0.76-CVE-2025-52520.patch
+Patch45: %{name}-7.0.76-CVE-2025-61795.patch
+Patch46: %{name}-7.0.76-CVE-2026-24733.patch
+Patch47: %{name}-7.0.76-CVE-2026-24880.patch
+Patch48: %{name}-7.0.76-CVE-2026-78383.patch
+Patch49: %{name}-7.0.76-CVE-2026-76183.patch
+Patch50: %{name}-7.0.76-CVE-2026-73180.patch
+Patch51: %{name}-7.0.76-CVE-2026-79677.patch
+Patch52: %{name}-7.0.76-CVE-2026-87022.patch
+Patch53: %{name}-7.0.76-CVE-2019-0221.patch
+Patch54: %{name}-7.0.76-CVE-2025-46701.patch
+Patch55: %{name}-7.0.76-CVE-2025-55754.patch
+Patch56: %{name}-7.0.76-CVE-2026-50229.patch
+Patch57: %{name}-7.0.76-CVE-2026-74049.patch
+Patch58: %{name}-7.0.76-CVE-2026-41284.patch
+Patch59: %{name}-7.0.76-CVE-2026-43514.patch
 
 BuildArch:     noarch
 
@@ -133,6 +163,7 @@ BuildRequires: log4j
 BuildRequires: geronimo-jaxrpc
 BuildRequires: wsdl4j
 BuildRequires: systemd-units
+BuildRequires: zip
 Requires:      apache-commons-daemon
 Requires:      apache-commons-logging
 Requires:      apache-commons-collections
@@ -288,6 +319,36 @@ find . -type f \( -name "*.bat" -o -name "*.class" -o -name Thumbs.db -o -name "
 %patch27 -p1
 %patch28 -p1
 %patch29 -p1
+%patch30 -p1
+%patch31 -p1
+%patch32 -p1
+%patch33 -p1
+%patch34 -p1
+%patch35 -p1
+%patch36 -p1
+%patch37 -p1
+%patch38 -p1
+%patch39 -p1
+%patch40 -p1
+%patch41 -p1
+%patch42 -p1
+%patch43 -p1
+%patch44 -p1
+%patch45 -p1
+%patch46 -p1
+%patch47 -p1
+%patch48 -p1
+%patch49 -p1
+%patch50 -p1
+%patch51 -p1
+%patch52 -p1
+%patch53 -p1
+%patch54 -p1
+%patch55 -p1
+%patch56 -p1
+%patch57 -p1
+%patch58 -p1
+%patch59 -p1
 
 %{__ln_s} $(build-classpath jakarta-taglibs-core) webapps/examples/WEB-INF/lib/jstl.jar
 %{__ln_s} $(build-classpath jakarta-taglibs-standard) webapps/examples/WEB-INF/lib/standard.jar
@@ -362,6 +423,15 @@ zip -u output/build/lib/tomcat-api.jar META-INF/MANIFEST.MF
 cp -p %{SOURCE16} META-INF/MANIFEST.MF
 touch META-INF/MANIFEST.MF
 zip -u output/build/bin/tomcat-juli.jar META-INF/MANIFEST.MF
+
+# SOURCE26 is upstream's prebuilt 7.0.76 extras tomcat-juli.jar. Upstream
+# builds its org.apache.juli classes from the main build, so refresh them
+# from this build to pick up the JULI source patches (CVE-2025-55754).
+%{__mkdir_p} output/extras-juli
+%{__cp} -p %{SOURCE26} output/extras-juli/tomcat-juli.jar
+pushd output/classes
+zip -q ../extras-juli/tomcat-juli.jar org/apache/juli/*.class
+popd
 
 %install
 # build initial path structure
@@ -473,7 +543,7 @@ pushd ${RPM_BUILD_ROOT}%{libdir}
     %{__mkdir} extras
     pushd extras
         %{__cp} -p %{SOURCE25} .
-        %{__cp} -p %{SOURCE26} .
+        %{__cp} -p %{_builddir}/%{packdname}/output/extras-juli/tomcat-juli.jar .
     popd
 popd
 
@@ -732,6 +802,32 @@ fi
 %attr(0644,root,root) %{_unitdir}/%{name}-jsvc.service
 
 %changelog
+* Tue Nov 17 2026 Jeff Uphoff <juphoff@ciq.com> 0:7.0.76-17.1
+- Backport upstream fixes: CVE-2019-0221, CVE-2023-28708, CVE-2023-41080,
+  CVE-2023-42795, CVE-2025-46701, CVE-2025-48976, CVE-2025-48988,
+  CVE-2025-52520, CVE-2025-55754, CVE-2025-61795, CVE-2026-24733,
+  CVE-2026-24880, CVE-2026-41284, CVE-2026-43512, CVE-2026-43513,
+  CVE-2026-43514, CVE-2026-43515, CVE-2026-50229, CVE-2026-55276,
+  CVE-2026-55956, CVE-2026-65182, CVE-2026-65905, CVE-2026-68569,
+  CVE-2026-73180, CVE-2026-74049, CVE-2026-76183, CVE-2026-78383,
+  CVE-2026-79677, CVE-2026-87022, CVE-2026-101296
+- New Connector attributes maxPartCount (default 50) and maxPartHeaderSize
+  (default 512 bytes): multipart requests with more parts or larger part
+  headers are rejected; raise the attributes to restore the previous limits
+- LockOutRealm tracks user names case-insensitively by default (new
+  caseSensitive attribute)
+- JNDIRealm now always validates user passwords with a simple bind
+  (CVE-2026-101296); realms that used a SASL mechanism such as DIGEST-MD5
+  must use an ldaps:// connectionURL or useStartTls="true" so passwords
+  are not sent in cleartext
+- WebDAV LOCK, PROPFIND and MKCOL request bodies, with or without a
+  Content-Length, are limited by the new WebdavServlet init-param
+  maxRequestBodySize (default 4096 bytes)
+- Refresh the JULI formatter classes in the extras tomcat-juli.jar from
+  this build (CVE-2025-55754)
+- Fix test sources of the CVE-2020-1935 and CVE-2024-23672 patches so they
+  compile against 7.0.76
+
 * Mon Dec 16 2024 Jonathan Dieter <jdieter@ciq.com> 0:7.0.76-17
 - Fixes CVE-2021-25329
 - Fixes CVE-2023-46589
